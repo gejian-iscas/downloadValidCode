@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData">
+    <serverData>
+      <paths name="youqingi@chengmai.iok.la:30023">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/youqingi/workspace" local="$PROJECT_DIR$" web="0.0.0.0:8000" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
