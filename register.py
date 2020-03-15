@@ -33,8 +33,9 @@ class MonitorRegiste(object):
         self.url = url
         self.tmp_file = str(int(round(time.time() * 1000)))
         self.phone = phone
+        self.v_code = ""
         self.chrome_options = Options()
-        self.driver = webdriver.Chrome(executable_path="utils/chromedriver.exe", chrome_options=self.chrome_options)
+        self.driver = webdriver.Chrome(executable_path="utils/chromedriver", chrome_options=self.chrome_options)
 
     def get_codejson(self):
         host = 'http://chengmai.iok.la:38450'
@@ -60,7 +61,6 @@ class MonitorRegiste(object):
         return predict
 
     def get_valid_code(self):
-        v_code = ""
         try:
             valid_img = WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, '#inputForm > p.validate > span > img')))
@@ -73,16 +73,14 @@ class MonitorRegiste(object):
             img = img.crop((left, top, right, bottom))
             img.save('pics/' + self.tmp_file + '-validcode.png')
             codeJson = self.get_codejson()
-            v_code = self.json2code(codeJson)
+            self.v_code = self.json2code(codeJson)
         except Exception as te:
             print(te)
-        finally:
-            return v_code
 
-    def mv2err_pics(self, v_code):
+    def mv2err_pics(self):
         srcPath = 'pics/' + self.tmp_file + '-validcode.png'
         now_time = int(round(time.time() * 1000))
-        dstPath = 'errpics/' + v_code + '-' + self.tmp_file + '.png'
+        dstPath = 'errpics/' + self.v_code + '-' + self.tmp_file + '.png'
         copyfile(srcPath, dstPath)
 
     def update_err_message(self):
@@ -93,11 +91,11 @@ class MonitorRegiste(object):
             err_message = err.getText()
         return err_message
 
-    def start(self, phone):
+    def start(self):
         self.driver.get(self.url)
-        v_code = self.get_valid_code()
-        self.driver.find_element_by_id('mobile').send_keys(phone)
-        self.driver.find_element_by_id('validate').send_keys(v_code)
+        self.get_valid_code()
+        self.driver.find_element_by_id('mobile').send_keys(self.phone)
+        self.driver.find_element_by_id('validate').send_keys(self.v_code)
         self.driver.find_element_by_id('nextBtn').click()
         time.sleep(2)
         url_now = self.driver.current_url
@@ -115,18 +113,18 @@ class MonitorRegiste(object):
                         err_message = ""
                     elif err_message == "验证码不正确":
                         print(err_message)
-                        self.mv2err_pics(v_code)
+                        self.mv2err_pics()
                         time.sleep(2)
                         self.driver.find_element_by_id('validate').clear()
-                        v_code = self.get_valid_code()
-                        self.driver.find_element_by_id('validate').send_keys(v_code)
+                        self.get_valid_code()
+                        self.driver.find_element_by_id('validate').send_keys(self.v_code)
                         self.driver.find_element_by_id('nextBtn').click()
                         time.sleep(2)
                         err_message = self.update_err_message()
 
     def run(self):
         """ 入口函数 """
-        self.start(self.phone)
+        self.start()
         self.driver.quit()
 
 
@@ -137,16 +135,16 @@ def run(phone):
 
 
 def main():
-    phone_list = [13300109999, 13300109998, 13300109997, 13300109996, 13300109995,
-                  13300109994, 13300109993, 13300109992, 13300109991, 13300109990,
-                  13300109989, 13300109988, 13300109987, 13300109986, 13300109985,
-                  13300109984, 13300109983, 13300109982, 13300109981, 13300109980,
-                  13300109979, 13300109978, 13300109977, 13300109976, 13300109975,
-                  13300109974, 13300109973, 13300109972, 13300109971, 13300109970,
-                  13300109969, 13300109968, 13300109967, 13300109966, 13300109965,
-                  13300109964, 13300109963, 13300109962, 13300109961, 13300109960,
-                  13300109959, 13300109958, 13300109957, 13300109956, 13300109955]
-
+    # phone_list = [13300109999, 13300109998, 13300109997, 13300109996, 13300109995,
+    #               13300109994, 13300109993, 13300109992, 13300109991, 13300109990,
+    #               13300109989, 13300109988, 13300109987, 13300109986, 13300109985,
+    #               13300109984, 13300109983, 13300109982, 13300109981, 13300109980,
+    #               13300109979, 13300109978, 13300109977, 13300109976, 13300109975,
+    #               13300109974, 13300109973, 13300109972, 13300109971, 13300109970,
+    #               13300109969, 13300109968, 13300109967, 13300109966, 13300109965,
+    #               13300109964, 13300109963, 13300109962, 13300109961, 13300109960,
+    #               13300109959, 13300109958, 13300109957, 13300109956, 13300109955]
+    phone_list = [13300109999]
     with ThreadPoolExecutor(max_workers=1) as pool:
         pool.map(run, phone_list)
 
